@@ -28,83 +28,83 @@ for i in $@ ; do
             echo "No parameter defining the extra packages"
             usage
         fi
-	EXTRA_PACKAGES=${2}
-	shift
-	shift
+        EXTRA_PACKAGES=${2}
+        shift
+        shift
     ;;
     "--debootstrap-url"|"-u")
         if [ -z "${2}" ] ; then
-	    echo "No parameter defining the debootstrap URL"
-	    usage
-	fi
-	DEB_MIRROR=${2}
-	shift
-	shift
+            echo "No parameter defining the debootstrap URL"
+            usage
+        fi
+        DEB_MIRROR=${2}
+        shift
+        shift
     ;;
     "--minimal"|"-m")
         EXTRA=no
-	shift
+        shift
     ;;
     "--automatic-resize"|"-ar")
         AUTOMATIC_RESIZE=yes
-	shift
+        shift
     ;;
     "--automatic-resize-space"|"-ars")
         if [ -z "${2}" ] ; then
-	    echo "No parameter defining the suplementary space"
-	    usage
-	fi
-	AUTOMATIC_RESIZE_SPACE=${2}
-	shift
-	shift
+            echo "No parameter defining the suplementary space"
+            usage
+        fi
+        AUTOMATIC_RESIZE_SPACE=${2}
+        shift
+        shift
     ;;
     "--image-size"|"-is")
-	if [ -z "${2}" ] ; then
-	    echo "No parameter defining the image size"
-	    usage
-	fi
-	IMAGE_SIZE=${2}
-	shift
-	shift
+        if [ -z "${2}" ] ; then
+            echo "No parameter defining the image size"
+            usage
+        fi
+        IMAGE_SIZE=${2}
+        shift
+        shift
     ;;
     "--hook-script"|"-hs")
-	if [ -z "${2}" ] ; then
-	    echo "No parameter defining the hook script"
-	    usage
-	fi
-	if ! [ -x "${2}" ] ; then
-	    echo "Hook script not executable"
-	fi
-	HOOK_SCRIPT=${2}
-	shift
-	shift
+        if [ -z "${2}" ] ; then
+            echo "No parameter defining the hook script"
+            usage
+        fi
+        if ! [ -x "${2}" ] ; then
+            echo "Hook script not executable"
+        fi
+        HOOK_SCRIPT=${2}
+        shift
+        shift
     ;;
     "--sources.list-mirror"|"-s")
-	if [ -z "${2}" ] ; then
-	    echo "No parameter defining the hook script"
-	    usage
-	fi
-	SOURCE_LIST_MIRROR=${2}
-	shift
-	shift
+        if [ -z "${2}" ] ; then
+            echo "No parameter defining the hook script"
+            usage
+        fi
+        SOURCE_LIST_MIRROR=${2}
+        shift
+        shift
     ;;
     "--release"|"-r")
-	if [ "${2}" = "wheezy" ] || [ "${2}" = "jessie" ] ; then
-	    RELEASE=${2}
-	    shift
-	    shift
-	else
-	    echo "Release not recognized."
-	    usage
-	fi
+        if [ "${2}" = "wheezy" ] || [ "${2}" = "jessie" ] ; then
+            RELEASE=${2}
+            shift
+            shift
+        else
+            echo "Release not recognized."
+            usage
+        fi
     ;;
     "--password"|"-p")
-	if [ -z "${2}" ] ; then
-	    echo "No parameter defining the root password"
-	fi
-	ROOT_PASSWORD=${2}
-	shift
-	shift
+        if [ -z "${2}" ] ; then
+            echo "No parameter defining the root password"
+        fi
+        ROOT_PASSWORD=${2}
+        shift
+        shift
     ;;
     *)
     ;;
@@ -116,29 +116,30 @@ if [ -z "${RELEASE}" ] ; then
     usage
 fi
 if [ -z "${DEB_MIRROR}" ] ; then
-    DEB_MIRROR=http://http.debian.net/debian
+    DEB_MIRROR=http://ftp.at.debian.org/debian
 fi
 if [ -z "${EXTRA_PACKAGES}" ] ; then
     EXTRA_PACKAGES=bash-completion,joe,most,screen,less,vim,bzip2
 fi
 if [ -z "${SOURCE_LIST_MIRROR}" ] ; then
-    SOURCE_LIST_MIRROR=http://http.debian.net/debian
+    SOURCE_LIST_MIRROR=http://ftp.at.debian.org/debian/
 fi
 if [ -z "${IMAGE_SIZE}" ] ; then
-    IMAGE_SIZE=1
+    IMAGE_SIZE=2
 fi
 if [ -z "${AUTOMATIC_RESIZE_SPACE}" ] ; then
     AUTOMATIC_RESIZE_SPACE=50
 fi
 
+ADDITIONAL_PACKAGES=tcpdump,tcptraceroute,htop,multitail,ifstat
 NEEDED_PACKAGES=sudo,adduser,locales,extlinux,openssh-server,linux-image-amd64,euca2ools,file,kbd
 if [ "${RELEASE}" = "jessie" ] ; then
-    NEEDED_PACKAGES=${NEEDED_PACKAGES},cloud-init,cloud-utils,cloud-initramfs-growroot
+    NEEDED_PACKAGES=${NEEDED_PACKAGES},${ADDITIONAL_PACKAGES},cloud-init,cloud-utils,cloud-initramfs-growroot
 else
     # These are needed by cloud-init and friends, and since we don't want backports of them,
     # but just normal packages from Wheezy, we resolve dependencies by hand, prior to using
     # apt-get -t wheezy-backports install cloud-init cloud-utils cloud-initramfs-growroot
-    NEEDED_PACKAGES=${NEEDED_PACKAGES},python,python-paramiko,python-argparse,python-cheetah,python-configobj,python-oauth,python-software-properties,python-yaml,python-boto,python-prettytable,initramfs-tools,python-requests
+    NEEDED_PACKAGES=${NEEDED_PACKAGES},${ADDITIONAL_PACKAGES},python,python-paramiko,python-argparse,python-cheetah,python-configobj,python-oauth,python-software-properties,python-yaml,python-boto,python-prettytable,initramfs-tools,python-requests
 fi
 
 if [ ${EXTRA} = "no" ] ; then
@@ -150,10 +151,10 @@ if ! [ `whoami` = "root" ] ; then
     echo "You have to be root to run this script"
     exit 1
 fi
-FILE_NAME=debian-${RELEASE}-7.0.0-3-amd64
+FILE_NAME=debian-${RELEASE}-amd64_`date '+%F_%H%M%S'`
 AMI_NAME=${FILE_NAME}.raw
 QCOW2_NAME=${FILE_NAME}.qcow2
-rm -f ${AMI_NAME}
+#rm -f ${AMI_NAME}
 
 set -x
 
@@ -200,8 +201,8 @@ tune2fs -i 0 /dev/mapper/${LOOP_DEVICE}
 MOUNT_DIR=`mktemp -d -t build-debimg.XXXXXX`
 mount -o loop /dev/mapper/${LOOP_DEVICE} ${MOUNT_DIR}
 debootstrap --verbose \
-	--include=${PKG_LIST} \
-	${RELEASE} ${MOUNT_DIR} ${DEB_MIRROR}
+    --include=${PKG_LIST} \
+    ${RELEASE} ${MOUNT_DIR} ${DEB_MIRROR}
 
 ############################
 ### Customize the distro ###
@@ -211,11 +212,13 @@ debootstrap --verbose \
 # Setup default root password to what has been set on the command line
 if [ -n "${ROOT_PASSWORD}" ] ; then
     chroot ${MOUNT_DIR} sh -c "echo root:${ROOT_PASSWORD} | chpasswd"
+else
+  chroot ${MOUNT_DIR} sh -c "echo root:lol  | chpasswd"
 fi
 
 # Otherwise, we have a huge backdoor, since the root password
 # is always the same.
-sed -i "s/PermitRootLogin yes/PermitRootLogin without-password/" ${MOUNT_DIR}/etc/ssh/sshd_config
+# sed -i "s/PermitRootLogin yes/PermitRootLogin without-password/" ${MOUNT_DIR}/etc/ssh/sshd_config
 
 # Add a default "debian" user which is used by cloud-init by default
 chroot ${MOUNT_DIR} adduser --gecos Debian-cloud-init-user --disabled-password --quiet debian
@@ -230,8 +233,8 @@ chmod 0440 ${MOUNT_DIR}/etc/sudoers.d/debian-cloud-init
 # # # # # # # # # # # # # # #
 # Setup fstab
 echo "# /etc/fstab: static file system information.
-proc	/proc	proc	nodev,noexec,nosuid	0	0
-/dev/vda1	/	ext3	errors=remount-ro	0	1
+proc    /proc    proc    nodev,noexec,nosuid    0    0
+/dev/vda1    /    ext3    errors=remount-ro    0    1
 " > ${MOUNT_DIR}/etc/fstab
 chroot ${MOUNT_DIR} mount /proc || true
 
@@ -247,11 +250,11 @@ pci_hotplug
 if [ ${EXTRA} = "yes" ] ; then
     echo "# enable bash completion in interactive shells
 if ! shopt -oq posix; then
-    if [ -f /usr/share/bash-completion/bash_completion ]; then
-        . /usr/share/bash-completion/bash_completion
-    elif [ -f /etc/bash_completion ]; then
-        . /etc/bash_completion
-    fi
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+  fi
 fi" >>${MOUNT_DIR}/etc/bash.bashrc
 
     # No clear for the tty1 console
@@ -290,24 +293,28 @@ iface eth1 inet dhcp
 # Maybe the VM has 3 NICs?
 allow-hotplug eth2
 iface eth2 inet dhcp
-" > ${MOUNT_DIR}/etc/network/interfaces
+
+# Maybe the VM has 4 NICs?
+allow-hotplug eth3
+iface eth3 inet dhcp
+" >${MOUNT_DIR}/etc/network/interfaces
 
 # Setup the default hostname (will be set by cloud-init
 # at boot time anyway)
-echo "debian.example.com" >${MOUNT_DIR}/etc/hostname
+echo "debian.cloud.testlab" >${MOUNT_DIR}/etc/hostname
 
 # This should be a correct default everywhere
-echo "deb ${SOURCE_LIST_MIRROR} ${RELEASE} main
-deb-src ${SOURCE_LIST_MIRROR} ${RELEASE} main" >${MOUNT_DIR}/etc/apt/sources.list
+echo "deb ${SOURCE_LIST_MIRROR} ${RELEASE} main contrib non-free
+deb-src ${SOURCE_LIST_MIRROR} ${RELEASE} main contrib non-free" >${MOUNT_DIR}/etc/apt/sources.list
 
 if [ "${RELEASE}" = "wheezy" ] ; then
-    echo "deb ${SOURCE_LIST_MIRROR} wheezy-updates main
-deb-src ${SOURCE_LIST_MIRROR} wheezy-updates main
-deb http://security.debian.org/ wheezy/updates main
-deb-src http://security.debian.org/ wheezy/updates main
+    echo "deb ${SOURCE_LIST_MIRROR} wheezy-updates main contrib non-free
+deb-src ${SOURCE_LIST_MIRROR} wheezy-updates main contrib non-free
+deb http://security.debian.org/ wheezy/updates main contrib non-free
+deb-src http://security.debian.org/ wheezy/updates main contrib non-free
 
-deb ${SOURCE_LIST_MIRROR} wheezy-backports main
-deb-src ${SOURCE_LIST_MIRROR} wheezy-backports main
+deb ${SOURCE_LIST_MIRROR} wheezy-backports main contrib non-free
+deb-src ${SOURCE_LIST_MIRROR} wheezy-backports main contrib non-free
 " >>${MOUNT_DIR}/etc/apt/sources.list
 fi
 chroot ${MOUNT_DIR} apt-get update
@@ -321,6 +328,21 @@ fi
 # For OpenStack, we would like to use Ec2 and no other API
 echo "# to update this file, run dpkg-reconfigure cloud-init
 datasource_list: [ Ec2 ]" >${MOUNT_DIR}/etc/cloud/cloud.cfg.d/90_dpkg.cfg
+
+# Allow SSH in as root, even though it might be unsecure
+sed -i 's/disable_root: true/disable_root: false/' ${MOUNT_DIR}/etc/cloud/cloud.cfg
+
+# Set up apt hhtp proxy for use in tssk cloud
+echo 'Acquire::http::Proxy "http://10.233.130.190:8080";' >>${MOUNT_DIR}/etc/apt/apt.conf.d/00proxy
+
+# Set timezone to Europe/Bratislava
+cp ${MOUNT_DIR}/usr/share/zoneinfo/Europe/Bratislava ${MOUNT_DIR}/etc/localtime
+
+# Temporary workaround for set_root_password
+# Script will be moved to github and downloaded on every build
+cp /mnt/iso/workspace/debian/auto/lib/set_root_password ${MOUNT_DIR}/etc/init.d/set_root_password
+chroot ${MOUNT_DIR} chmod +x /etc/init.d/set_root_password
+chroot ${MOUNT_DIR} update-rc.d set_root_password defaults
 
 # Setting-up initramfs
 chroot ${MOUNT_DIR} update-initramfs -u
@@ -337,8 +359,8 @@ echo "default linux
 timeout 1
 label linux
 kernel ${KERNEL}
-append initrd=${RAMDISK} root=/dev/vda1 ro quiet" > ${MOUNT_DIR}/boot/extlinux/extlinux.conf
-#append initrd=${RAMDISK} root=/dev/vda1 console=tty0 console=ttyS0,115200 ro quiet" > ${MOUNT_DIR}/boot/extlinux/extlinux.conf
+append initrd=${RAMDISK} root=/dev/vda1 console=tty0 console=ttyS0,115200 ro quiet" > ${MOUNT_DIR}/boot/extlinux/extlinux.conf
+#append initrd=${RAMDISK} root=/dev/vda1 ro console=ttyS0" > ${MOUNT_DIR}/boot/extlinux/extlinux.conf
 cp ${MOUNT_DIR}/boot/extlinux/extlinux.conf ${MOUNT_DIR}/extlinux.conf
 extlinux --install ${MOUNT_DIR}
 #chroot ${MOUNT_DIR} extlinux-update
@@ -391,4 +413,5 @@ if [ "${AUTOMATIC_RESIZE}" = "yes" ] ; then
     install-mbr ${AMI_NAME}
 fi
 
-qemu-img convert -c -f raw ${AMI_NAME} -O qcow2 ${QCOW2_NAME}
+#qemu-img convert -c -f raw ${AMI_NAME} -O qcow2 ${QCOW2_NAME}
+
