@@ -154,7 +154,6 @@ fi
 FILE_NAME=debian-${RELEASE}-amd64_`date '+%F_%H%M%S'`
 AMI_NAME=${FILE_NAME}.raw
 QCOW2_NAME=${FILE_NAME}.qcow2
-#rm -f ${AMI_NAME}
 
 set -x
 
@@ -181,7 +180,7 @@ else
 fi
 
 cleanup(){
-    [ ! -d "${MOUNT_DIR}" ] && return
+[ ! -d "${MOUNT_DIR}" ] && return
     echo
     echo "error, umounting $MOUNT_DIR"
     chroot ${MOUNT_DIR} umount /proc || true
@@ -200,7 +199,7 @@ tune2fs -i 0 /dev/mapper/${LOOP_DEVICE}
 
 MOUNT_DIR=`mktemp -d -t build-debimg.XXXXXX`
 mount -o loop /dev/mapper/${LOOP_DEVICE} ${MOUNT_DIR}
-debootstrap --verbose \
+debootstrap --arch=amd64 --verbose \
     --include=${PKG_LIST} \
     ${RELEASE} ${MOUNT_DIR} ${DEB_MIRROR}
 
@@ -208,16 +207,16 @@ debootstrap --verbose \
 ### Customize the distro ###
 ############################
 ### Customize: access to the VM ###
-# # # # # # # # # # # # # # # # # #
 # Setup default root password to what has been set on the command line
+# Password will be overidden by set_root_password unles it fails
+# in which case, we have a backdoor
 if [ -n "${ROOT_PASSWORD}" ] ; then
     chroot ${MOUNT_DIR} sh -c "echo root:${ROOT_PASSWORD} | chpasswd"
 else
   chroot ${MOUNT_DIR} sh -c "echo root:lol  | chpasswd"
 fi
 
-# Otherwise, we have a huge backdoor, since the root password
-# is always the same.
+# Since we implemented "backdoor" we want to be able to use it :)
 # sed -i "s/PermitRootLogin yes/PermitRootLogin without-password/" ${MOUNT_DIR}/etc/ssh/sshd_config
 
 # Add a default "debian" user which is used by cloud-init by default
@@ -230,7 +229,6 @@ echo "debian ALL = NOPASSWD: ALL" >${MOUNT_DIR}/etc/sudoers.d/debian-cloud-init
 chmod 0440 ${MOUNT_DIR}/etc/sudoers.d/debian-cloud-init
 
 ### Customize: misc stuff ###
-# # # # # # # # # # # # # # #
 # Setup fstab
 echo "# /etc/fstab: static file system information.
 proc    /proc    proc    nodev,noexec,nosuid    0    0
