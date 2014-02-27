@@ -340,7 +340,7 @@ cp ${MOUNT_DIR}/usr/share/zoneinfo/Europe/Bratislava ${MOUNT_DIR}/etc/localtime
 
 # Temporary workaround for set_root_password
 # Script will be moved to github and downloaded on every build
-cp /mnt/iso/workspace/debian/auto/lib/set_root_password ${MOUNT_DIR}/etc/init.d/set_root_password
+cp ./lib/set_root_password ${MOUNT_DIR}/etc/init.d/set_root_password
 chroot ${MOUNT_DIR} chmod +x /etc/init.d/set_root_password
 chroot ${MOUNT_DIR} update-rc.d set_root_password defaults
 
