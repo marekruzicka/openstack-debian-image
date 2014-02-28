@@ -188,7 +188,7 @@ cleanup(){
     echo "saving logs and umounting $MOUNT_DIR"
     DEBOOTSRAP_LOG=${MOUNT_DIR}/debootstrap/debootstrap.log
     mkdir -p log
-    cp ${DEBOOTSRAP_LOG} log/${DEBOOTSRAP_LOG}_${DATE}
+    cp ${DEBOOTSRAP_LOG} log/debootstrap.log_${DATE}
     chroot ${MOUNT_DIR} umount /proc || true
     chroot ${MOUNT_DIR} umount /sys || true
     umount ${MOUNT_DIR}
