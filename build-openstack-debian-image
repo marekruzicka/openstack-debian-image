@@ -151,7 +151,8 @@ if ! [ `whoami` = "root" ] ; then
     echo "You have to be root to run this script"
     exit 1
 fi
-FILE_NAME=debian-${RELEASE}-amd64_`date '+%F_%H%M%S'`
+DATE=`date '+%F_%H%M%S'`
+FILE_NAME=debian-${RELEASE}-amd64_${DATE}
 AMI_NAME=${FILE_NAME}.raw
 QCOW2_NAME=${FILE_NAME}.qcow2
 
@@ -181,8 +182,13 @@ fi
 
 cleanup(){
 [ ! -d "${MOUNT_DIR}" ] && return
-    echo
-    echo "error, umounting $MOUNT_DIR"
+# Save debootsrap log before deleting everything during cleanup
+# Probably much more should be saved in case for debug purpose
+    echo "error occured ... "
+    echo "saving logs and umounting $MOUNT_DIR"
+    DEBOOTSRAP_LOG=${MOUNT_DIR}/debootstrap/debootstrap.log
+    mkdir -p log
+    cp ${DEBOOTSRAP_LOG} log/${DEBOOTSRAP_LOG}_${DATE}
     chroot ${MOUNT_DIR} umount /proc || true
     chroot ${MOUNT_DIR} umount /sys || true
     umount ${MOUNT_DIR}
