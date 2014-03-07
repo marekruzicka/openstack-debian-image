@@ -12,7 +12,7 @@ Options are:
  --sources.list-mirror|-s <source-list-mirror> (default: http://http.debian.net/debian)
  --extra-packages|-e <package>,<package>,...
  --hook-script|-hs <hook-script>
- --image-size|-is <image-size> (default: 1G)
+ --image-size|-is <image-size> (default: 2G)
  --automatic-resize|-ar
  --automatic-resize-space|-ars <suplementary-space> (default: 50M)
  --password|-p <root-password> (dangerous option: avoid it if possible)
